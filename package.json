@@ -1,0 +1,29 @@
+{
+  "name": "ya-cache",
+  "version": "1.0.0-alpha",
+  "description": "Yet another cache",
+  "main": "lib/Cache.js",
+  "scripts": {
+    "test": "mocha -r babel/register -r test/support.js src/**/__tests__/**/*.js",
+    "compile": "rm -rf lib && babel src/ -d lib/ --ignore './__tests__/*'",
+    "prepublish": "npm run compile"
+  },
+  "keywords": [
+    "cache",
+    "fs",
+    "lock"
+  ],
+  "author": "Spencer Alger <email@spalger.com>",
+  "license": "MIT",
+  "dependencies": {
+    "lockfile": "^1.0.1",
+    "promify": "^1.0.1"
+  },
+  "devDependencies": {
+    "babel": "^5.5.7",
+    "chai": "^3.0.0",
+    "chai-as-promised": "^5.1.0",
+    "mocha": "^2.2.5",
+    "sinon": "^1.15.3"
+  }
+}

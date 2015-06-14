@@ -1,0 +1,8 @@
+{
+  "esnext": true,
+  "asi": true,
+  "undef": true,
+  "node": true,
+  "supernew": true,
+  "expr": true
+}
