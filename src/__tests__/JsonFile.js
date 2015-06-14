@@ -1,6 +1,6 @@
 describe('JsonFile', ()=> {
   let JsonFile = require('../JsonFile')
-  let delay = require('./.utils/delay')
+  let delay = requireRoot('test/utils/delay')
 
   let {readFileSync, existsSync, unlinkSync} = require('fs')
 
@@ -39,18 +39,20 @@ describe('JsonFile', ()=> {
       let val = { n: Math.random() }
 
       return f.write(val)
-      .then(()=> f.update(v => {
-        v.should.eql(val)
-        val.n = Math.random()
-        return { n: val.n }
-      }))
+      .then(()=> {
+        return f.update(v => {
+          v.should.eql(val)
+          val.n = Math.random()
+          return { n: val.n }
+        })
+      })
       .should.eventually.eql(val)
     })
 
     it('keeps a lock preventing subsequent updated', ()=> {
       let f = new JsonFile(fPath)
       return f.update(()=> {
-        return f.update(()=> {}).should.be.rejectedWith('EEXIST')
+        return f.update().should.be.rejectedWith('EEXIST')
       })
     })
 
@@ -60,8 +62,7 @@ describe('JsonFile', ()=> {
         return Promise.all([
           delay(10),
           delay(5).then(()=> {
-            return f.update(()=> {})
-            .should.be.rejectedWith('EEXIST')
+            return f.update().should.be.rejectedWith('EEXIST')
           })
         ])
       })

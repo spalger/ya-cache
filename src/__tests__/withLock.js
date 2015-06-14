@@ -3,7 +3,7 @@ describe('withLock()', function () {
   let {unlinkSync, existsSync} = require('fs')
 
   let withLock = require('../withLock')
-  let delay = require('./.utils/delay')
+  let delay = requireRoot('test/utils/delay')
 
   beforeEach(function () {
     try { unlinkSync(testLockFile) } catch (e) {}

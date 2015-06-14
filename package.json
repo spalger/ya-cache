@@ -16,7 +16,9 @@
   "author": "Spencer Alger <email@spalger.com>",
   "license": "MIT",
   "dependencies": {
+    "debug": "^2.2.0",
     "lockfile": "^1.0.1",
+    "mkdirp": "^0.5.1",
     "promify": "^1.0.1"
   },
   "devDependencies": {

@@ -1,47 +1,52 @@
 let promify = require('promify')
-let read = promify(require('fs').readFile)
-let write = promify(require('fs').writeFile)
+let fs = require('fs')
+let debug = require('debug')('ya-cache:JsonFile')
+
+let read = promify(fs.readFile)
+let write = promify(fs.writeFile)
 
 let withLock = require('./withLock');
+
+const DEFAULT = function () {}
 
 export default class JsonFile {
   constructor(path, lockfileOpts) {
     this._path = path
+    this._fd = null
+    this._fdRefCount = 0
     this._lockfile = this._path + '.lock'
     this._lockfileOpts = lockfileOpts || {}
     this._readOpts = { encoding: 'utf8' }
     this._writeOpts = { encoding: 'utf8' }
   }
 
-  read(defaultVal) {
-    return read(this._path, this._readOpts)
-    .then(JSON.parse, (err)=> {
-      // allow swallowing read errors
-      if (defaultVal === undefined) throw err
-      else return defaultVal
-    })
+  async read(defaultVal) {
+    debug('reading %s with default: %s', this._path, defaultVal)
+    let json = DEFAULT
+    try { json = await read(this._path, this._readOpts) } catch (e) {}
+
+    return json === DEFAULT ? defaultVal : JSON.parse(json)
   }
 
-  write(val) {
-    return Promise.resolve(val)
-    .then(JSON.stringify)
-    .then((json) => write(this._path, json, this._writeOpts))
+  async write(val) {
+    debug('writing %s', this._path)
+    let json = JSON.stringify(val)
+    await write(this._path, json, this._writeOpts)
   }
 
-  update(block) {
-    return withLock(this._lockfile, this._lockfileOpts, ()=> {
-      let stash;
+  async update(block) {
+    debug('updating %s', this._path)
 
-      return this.read({})
-      // stash the stored value in scope
-      .then((val) => stash = val)
-      .then(block)
-      .then((val) => {
-        // if the block returned a new val, update our stash
-        stash = val === undefined ? stash : val
-        return this.write(stash)
-      })
-      .then(() => stash)
+    // ask for the file descriptor so that it sticks around
+    // for all of this call
+    return await withLock(this._lockfile, this._lockfileOpts, async ()=> {
+      let stash = await this.read({})
+
+      let newStash = block ? await block(stash) : undefined;
+      if (newStash !== undefined) stash = newStash
+
+      await this.write(stash)
+      return stash
     })
   }
 }

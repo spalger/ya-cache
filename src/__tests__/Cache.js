@@ -2,7 +2,8 @@ let {join} = require('path')
 let {existsSync, unlinkSync} = require('fs')
 
 describe('Cache', ()=> {
-  describe('operation order', ()=> {
+  describe('operation order', function () {
+
     let Cache = require('../Cache')
     let cachePath = join(__dirname, '__cache__')
 
