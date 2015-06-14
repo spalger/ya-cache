@@ -24,6 +24,12 @@ describe('Cache', ()=> {
       .should.eventually.eql(['baz', 'bar', 'baz', 'baz'])
     })
 
+    it('gets all values when get without args', async ()=> {
+      await cache.sets({ foo: 'bar', baz: 'xib' })
+      let vals = await cache.get()
+      vals.should.eql({ foo: 'bar', baz: 'xib'})
+    })
+
     it('provides a multi-get and multi-set api', function () {
       return cache.sets({
         a: 1,

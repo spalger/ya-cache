@@ -1,8 +1,11 @@
 let keys = Object.keys
 let debug = require('debug')('ya-cache:Cache')
+let clone = require('lodash.clone')
 
 let JsonFile = require('./JsonFile')
 let props = require('./props')
+
+const ALL_KEYS = { toString: ()=> 'all keys' }
 
 export default class Cache {
   constructor(path, lockOpts = { wait: 5000 }) {
@@ -11,7 +14,7 @@ export default class Cache {
     this._file = new JsonFile(path, lockOpts)
   }
 
-  get(key) {
+  get(key = ALL_KEYS) {
     debug('getting %s', key)
     return new Promise((resolve, reject) => {
       this._ops.add({ type: 'get', key, resolve, reject })
@@ -60,7 +63,7 @@ export default class Cache {
       ops.forEach((op, {type, key, val, resolve}) => {
         switch (type) {
         case 'get':
-          resolve(vals[key])
+          resolve(clone(key == ALL_KEYS ? vals : vals[key]))
           ops.delete(op)
           break
 
