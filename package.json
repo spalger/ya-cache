@@ -18,7 +18,6 @@
   "dependencies": {
     "debug": "^2.2.0",
     "lockfile": "^1.0.1",
-    "lodash.clone": "^3.0.2",
     "mkdirp": "^0.5.1",
     "promify": "^1.0.1"
   },

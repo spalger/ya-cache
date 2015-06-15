@@ -21,11 +21,14 @@ describe('Cache', ()=> {
         cache.set('foo', 'baz'),
         cache.get('foo')
       ])
-      .should.eventually.eql(['baz', 'bar', 'baz', 'baz'])
+      .should.eventually.eql([undefined, 'bar', undefined, 'baz'])
     })
 
     it('gets all values when get without args', async ()=> {
-      await cache.sets({ foo: 'bar', baz: 'xib' })
+      await cache.sets({
+        foo: 'bar',
+        baz: 'xib'
+      })
       let vals = await cache.get()
       vals.should.eql({ foo: 'bar', baz: 'xib'})
     })
@@ -52,7 +55,8 @@ describe('Cache', ()=> {
           cache.get('a'),
 
           cache.get('b').then(function (b) {
-            return cache.set('c', b)
+            cache.set('c', b)
+            return cache.get('c')
           })
           .then(function () {
             return cache.get('b')

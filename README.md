@@ -41,9 +41,9 @@ Constructs a cache object, provides the api to each cache
 
 
 ---
-#### `cache.get(key) -> Promise`
+#### `cache.get([key]) -> Promise`
 
-Get the value of a key, returns a promise
+Get the value of a key, returns a promise. If the key argument is undefined then all keys and their values are returned in an object.
 
 ```js
 cache.get('key').then(function (val) {
@@ -54,18 +54,18 @@ cache.get('key').then(function (val) {
 ---
 #### `cache.set(key, val) -> Promise`
 
-Set the value of a key, returns a promise that resolves to the saved value
+Set the value of a key, returns a promise.
 
 ```js
-cache.set('key', 'value').then(function (val) {
-  console.log('value for key is now set to', val)
+cache.set('key', 'value').then(function () {
+  console.log('value for %s is now set to %s', 'key', 'value')
 })
 ```
 
 ---
 #### `cache.gets(...keys) -> Promise`
 
-Get one or more keys, returns a promise that resolves to an array of values
+Get one or more keys, returns a promise that resolves to an array of values.
 
 ```js
 cache.gets('key1', 'key2', 'key3').then(function (vals) {
@@ -78,7 +78,7 @@ cache.gets('key1', 'key2', 'key3').then(function (vals) {
 ---
 #### `cache.sets({ key: value ... }) -> Promise`
 
-Set one of more keys, returns a promise that resolves to an object of the saved values
+Set one of more keys, returns a promise that resolves to an object of the saved values.
 
 ```js
 cache.sets({
@@ -87,5 +87,18 @@ cache.sets({
   key3: 'baz'
 }).then(function (vals) {
   console.log('saved vals', vals)
+})
+```
+
+---
+#### `cache.clear([key]) -> Promise`
+
+Clear a key in the cache. If the key is undefined then all keys are cleared
+
+```js
+cache.set('foo', 'bar')
+cache.clear('foo')
+cache.get('foo').then(function (val) {
+  console.log('foo equals "%s"', val) // foo equals "undefined"
 })
 ```

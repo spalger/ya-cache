@@ -1,24 +1,22 @@
 let keys = Object.keys
 let debug = require('debug')('ya-cache:Cache')
-let clone = require('lodash.clone')
 
-let JsonFile = require('./JsonFile')
-let props = require('./props')
+let FsMap = require('./FsMap')
 
-const ALL_KEYS = { toString: ()=> 'all keys' }
+const allKeys = Symbol('allKeys')
+const noError = Symbol('noError')
 
 export default class Cache {
   constructor(path, lockOpts = { wait: 5000 }) {
     this._ops = new Set()
-    this._activeFlush = null
-    this._file = new JsonFile(path, lockOpts)
+    this._file = new FsMap(path, lockOpts)
   }
 
-  get(key = ALL_KEYS) {
+  get(key = allKeys) {
     debug('getting %s', key)
     return new Promise((resolve, reject) => {
       this._ops.add({ type: 'get', key, resolve, reject })
-      this._flush()
+      this.flush()
     })
   }
 
@@ -26,7 +24,7 @@ export default class Cache {
     debug('setting %s to %j', key, val)
     return new Promise((resolve, reject) => {
       this._ops.add({ type: 'set', key, val, resolve, reject })
-      this._flush()
+      this.flush()
     })
   }
 
@@ -34,69 +32,87 @@ export default class Cache {
     return Promise.all(keys.map(k => this.get(k)))
   }
 
-  sets(map) {
-    let sets = {}
-    for (let k of keys(map)) sets[k] = this.set(k, map[k])
-    return props(sets)
+  sets(vals) {
+    return Promise.all(
+      keys(vals).map( k => this.set(k, vals[k]) )
+    )
   }
 
-  _flush() {
-    if (this._activeFlush) return this._activeFlush;
-
-    // don't slice yet, it's okay if it changes size
-    // as soon as .update begins we prevent changes to ops,
-    // but until then we allow all _ops current and future
-    //
-    // did this to fix a bug where .update() would fail before
-    // calling the block. This prevented ops from ever getting
-    // values so the error was just swallowed (no ops to tell
-    // about it). Now, if an error occurs before we fork from
-    // this._ops all ops will fail (thumbsup)
-    let ops = this._ops
-    let writtenVals = null
-
-    this._activeFlush = this._file.update((vals) => {
-
-      this._ops = new Set() // prevent ops from getting bigger
-      debug('adding %d ops to the flush', ops.size)
-
-      ops.forEach((op, {type, key, val, resolve}) => {
-        switch (type) {
-        case 'get':
-          resolve(clone(key == ALL_KEYS ? vals : vals[key]))
-          ops.delete(op)
-          break
-
-        case 'set':
-          vals[key] = val
-          break
-
-        default:
-          throw new TypeError(`unkown op type ${type}`)
-        }
-      })
-
-      return (writtenVals = vals)
+  clear(key = allKeys) {
+    return new Promise((resolve, reject) => {
+      this._ops.add({ type: 'clear', key, resolve, reject })
+      this.flush()
     })
-    .then(
-      (vals) => {
-        debug('update complete')
-        ops.forEach((op, i) => op.resolve(writtenVals[op.key]))
-      },
-      (err) => {
-        debug('update failed %s', err)
-        ops.forEach((op, i) => op.reject(err))
+  }
+
+  flush() {
+    return this._activeFlush || (this._activeFlush = this._flush());
+  }
+
+  // the return value of this async function is generally ignored so make
+  // sure we handle the error or at least log it
+  async _flush() {
+    try {
+
+      let ops = this._ops
+      let updateErr = noError
+      try {
+        await this._file.update((vals) => {
+          debug('flushing %d ops', ops.size)
+          this._ops = new Set() // we have begun, no more noobs
+
+          ops.forEach((op, {type, key, val, resolve}) => {
+            switch (type) {
+            case 'get':
+              if (key === allKeys) {
+                let all = {}
+                for (let [key, val] of vals.entries()) all[key] = val
+                debug('get all keys', all)
+                resolve(all)
+              } else {
+                resolve(vals.get(key))
+              }
+
+              ops.delete(op)
+              break
+
+            case 'set':
+              vals.set(key, val)
+              break
+
+            case 'clear':
+              if (key === allKeys) vals.clear()
+              else vals.delete(key)
+              break
+
+            default:
+              throw new TypeError(`unkown op type ${type}`)
+            }
+          })
+        })
+      } catch (e) {
+        updateErr = e
       }
-    )
-    .then(() => {
-      this._activeFlush = null;
+
+      if (updateErr === noError) {
+        debug('update complete')
+        ops.forEach((op) => op.resolve())
+      } else {
+        debug('update failed %s', updateErr)
+        ops.forEach((op) => op.reject(updateErr))
+      }
+    }
+    catch (err) {
+      console.log('Unhandled exceptions while flushing cache')
+      console.log((err && (err.stack || err.message)) || err)
+    }
+    finally {
+      this._activeFlush = null
 
       if (this._ops.size) {
         debug('more operations to complete, reflushing')
-        return this._flush()
+        await this._flush()
       }
-    })
-
-    return this._activeFlush
+    }
   }
 }

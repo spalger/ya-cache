@@ -9,7 +9,7 @@ let unlock = promify(lockfile.unlock)
 let mkdirp = promify(require('mkdirp'))
 let exists = (path) => new Promise((resolve)=> fs.exists(path, resolve))
 
-const NOERR = function(){}
+const noError = Symbol('noError')
 
 export default async (path, opts, block = null)=> {
   if (!block && typeof opts === 'function') {
@@ -24,7 +24,7 @@ export default async (path, opts, block = null)=> {
   debug('locked', path)
 
   let ret
-  let err = NOERR
+  let err = noError
 
   try {
     ret = await block()
@@ -35,6 +35,6 @@ export default async (path, opts, block = null)=> {
   await unlock(path)
   debug('unlocked %s', path)
 
-  if (err !== NOERR) throw err
-  else return ret
+  if (err === noError) return ret
+  throw err
 }
