@@ -1,6 +1,6 @@
 describe('FsMap', ()=> {
   let FsMap = require('../FsMap')
-  let delay = requireRoot('test/utils/delay')
+  let delay = require('./delay')
 
   let {readFileSync, writeFileSync, existsSync, unlinkSync} = require('fs')
 

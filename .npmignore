@@ -1,2 +1,5 @@
 src
-lib/**/_test_*
+lib/**/__tests__*
+.gitignore
+.jshintrc
+.babelrc

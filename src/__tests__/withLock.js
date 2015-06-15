@@ -1,20 +1,20 @@
 describe('withLock()', function () {
-  let testLockFile = require('path').join(__dirname, '.lockfile')
+  let lPath = require('path').join(__dirname, '.lockfile')
   let {unlinkSync, existsSync} = require('fs')
 
   let withLock = require('../withLock')
-  let delay = requireRoot('test/utils/delay')
+  let delay = require('./delay')
 
   beforeEach(function () {
-    try { unlinkSync(testLockFile) } catch (e) {}
+    try { unlinkSync(lPath) } catch (e) {}
   })
 
   describe('(path, block:fn -> Promise)', function () {
     it('waits for the blocks promise to complete', function () {
       let ran = false
-      return withLock(testLockFile, ()=> {
+      return withLock(lPath, ()=> {
         return delay(4).then(() => {
-          existsSync(testLockFile).should.be.true
+          existsSync(lPath).should.be.true
           ran = true
         })
       })
@@ -22,10 +22,10 @@ describe('withLock()', function () {
     })
 
     it('unlocks when the block fails', function () {
-      return withLock(testLockFile, ()=> { throw new Error })
+      return withLock(lPath, ()=> { throw new Error })
       .should.be.rejectedWith(Error)
       .then(function () {
-        existsSync(testLockFile).should.be.false
+        existsSync(lPath).should.be.false
       })
     })
   })
