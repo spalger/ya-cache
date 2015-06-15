@@ -1,15 +1,15 @@
 # yet another cache
 
-Why the heck does the world need another caching module? Well, it probably doesn't but while working on [http-asset](http://github.com/spalger/http-asset) part of me was feeling crazy, part of me was feeling ambitious, and the rest of me was too lazy to sift through all the caching modules on NPM to find the one that fit the bill.
+Why the heck does the world need another caching module? Well, it probably doesn't but while working on [http-asset](http://github.com/spalger/http-asset) part of me was feeling crazy, part of me was feeling ambitious, and the rest of me was too lazy to sift through all the caching modules on NPM to find the one that best fit the bill.
 
 So, I offer you ya-cache.
 
 ## features
 
  - super simple api
- - filesystem backed
+ - file system backed
  - cache is just JSON in a file
- - filesystem locking ¯\\&#95;(ツ)&#95;/¯
+ - file system locking ¯\\&#95;(ツ)&#95;/¯
 
 ## example
 

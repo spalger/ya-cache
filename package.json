@@ -28,5 +28,16 @@
     "chai-as-promised": "^5.1.0",
     "mocha": "^2.2.5",
     "sinon": "^1.15.3"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spalger/ya-cache.git"
+  },
+  "bugs": {
+    "url": "https://github.com/spalger/ya-cache/issues"
+  },
+  "homepage": "https://github.com/spalger/ya-cache#readme"
 }
